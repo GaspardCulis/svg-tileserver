@@ -55,7 +55,7 @@ async fn manual_hello() -> impl Responder {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     const SVG_PATH: &str =
-        "C:/Users/a903823/OneDrive - Eviden/Documents/CODE/svguez/public/svg/sil/BT.PCT.opti.svg";
+        "C:/Users/a903823/OneDrive - Eviden/Documents/CODE/svguez/public/svg/elecgeo/ELECGEO.PCT.opti.svg";
 
     println!("Starting server...");
     let now = Instant::now();
