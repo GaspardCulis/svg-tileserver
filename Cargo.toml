@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-resvg = "0.41.0"
+resvg = { path = "./resvg/crates/resvg" }
 tiny-skia = "0.11.4"
-usvg = "0.41.0"
+usvg = { path = "./resvg/crates/usvg" }
 actix-web = "4"
