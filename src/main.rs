@@ -12,7 +12,7 @@ async fn hello() -> impl Responder {
 }
 
 #[get("/tile/{z}/{x}/{y}.png")]
-async fn tile(path: web::Path<(u32, u32, u32)>, data: web::Data<AppState>) -> impl Responder {
+async fn tile(path: web::Path<(i32, i32, i32)>, data: web::Data<AppState>) -> impl Responder {
     let (z, x, y) = path.into_inner();
     let tree = &data.tree;
 
