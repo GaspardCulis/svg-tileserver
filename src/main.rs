@@ -14,6 +14,12 @@ async fn hello() -> impl Responder {
 #[get("/tile/{z}/{x}/{y}.png")]
 async fn tile(path: web::Path<(u32, u32, u32)>, data: web::Data<AppState>) -> impl Responder {
     let (z, x, y) = path.into_inner();
+    let tree = &data.tree;
+
+    let pixmap_size = tree.size().to_int_size();
+    let mut pixmap = tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height()).unwrap();
+    resvg::render(&tree, tiny_skia::Transform::default(), &mut pixmap.as_mut());
+
     HttpResponse::Ok().body(format!("Tile at (z={}, x={}, y={}) requested!", z, x, y))
 }
 
@@ -25,20 +31,20 @@ async fn manual_hello() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    const svg_path: &str =
+    const SVG_PATH: &str =
         "C:/Users/a903823/OneDrive - Eviden/Documents/CODE/svguez/public/svg/sil/BT.PCT.svg";
 
     let tree = {
         let mut opt = usvg::Options::default();
         // Get file's absolute directory.
-        opt.resources_dir = std::fs::canonicalize(&svg_path)
+        opt.resources_dir = std::fs::canonicalize(&SVG_PATH)
             .ok()
             .and_then(|p| p.parent().map(|p| p.to_path_buf()));
 
         let mut fontdb = fontdb::Database::new();
         fontdb.load_system_fonts();
 
-        let svg_data = std::fs::read(&svg_path).unwrap();
+        let svg_data = std::fs::read(&SVG_PATH).unwrap();
         usvg::Tree::from_data(&svg_data, &opt, &fontdb).unwrap()
     };
 
