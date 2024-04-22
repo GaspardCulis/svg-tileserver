@@ -1,9 +1,10 @@
 use actix_web::{get, http::StatusCode, web, App, HttpResponse, HttpServer, Responder};
+use std::sync::RwLock;
 use std::time::Instant;
 use usvg::fontdb;
 
 struct AppState {
-    tree: usvg::Tree, // <- Mutex is necessary to mutate safely across threads
+    tree: RwLock<usvg::Tree>, // <- Mutex is necessary to mutate safely across threads
 }
 
 #[get("/")]
@@ -13,9 +14,11 @@ async fn hello() -> impl Responder {
 
 #[get("/tile/{z}/{x}/{y}.png")]
 async fn tile(path: web::Path<(i32, i32, i32)>, data: web::Data<AppState>) -> impl Responder {
+    let now = Instant::now();
+
     let (z, x, y) = path.into_inner();
     let (z, x, y) = (z as f32, x as f32, y as f32);
-    let tree = &data.tree;
+    let tree = data.tree.read().unwrap();
 
     let width = 256f32;
     let height = 256f32;
@@ -24,7 +27,6 @@ async fn tile(path: web::Path<(i32, i32, i32)>, data: web::Data<AppState>) -> im
     let translate_x = -width * x - width * scale * 1.81;
     let translate_y = -height * y - height * scale * 1.92;
 
-    let now = Instant::now();
     let _pixmap_size = tree.size().to_int_size();
     let mut pixmap = tiny_skia::Pixmap::new(width as u32, height as u32).unwrap();
     resvg::render(
@@ -53,7 +55,7 @@ async fn manual_hello() -> impl Responder {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     const SVG_PATH: &str =
-        "C:/Users/a903823/OneDrive - Eviden/Documents/CODE/svguez/public/svg/elecgeo/ELECGEO.PCT.opti.svg";
+        "C:/Users/a903823/OneDrive - Eviden/Documents/CODE/svguez/public/svg/sil/BT.PCT.opti.svg";
 
     println!("Starting server...");
     let now = Instant::now();
@@ -74,7 +76,9 @@ async fn main() -> std::io::Result<()> {
     let elapsed = now.elapsed();
     println!("Parsing took {:.2?}", elapsed);
 
-    let state = web::Data::new(AppState { tree });
+    let state = web::Data::new(AppState {
+        tree: RwLock::new(tree),
+    });
 
     println!("Server started!");
     HttpServer::new(move || {
