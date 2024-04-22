@@ -7,21 +7,24 @@ async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
 
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
+#[get("/tile/{z}/{x}/{y}.png")]
+async fn tile(path: web::Path<(u32, u32, u32)>) -> impl Responder {
+    let (z, x, y) = path.into_inner();
+    HttpResponse::Ok().body(format!("Tile at (z={}, x={}, y={}) requested!", z, x, y))
 }
 
 async fn manual_hello() -> impl Responder {
     HttpResponse::Ok().body("Hey there!")
 }
 
+// https://actix.rs/docs/application#shared-mutable-state
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .service(hello)
-            .service(echo)
+            .service(tile)
             .route("/hey", web::get().to(manual_hello))
     })
     .bind(("127.0.0.1", 8080))?
