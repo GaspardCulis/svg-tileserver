@@ -1,10 +1,15 @@
-use actix_web::{get, http::StatusCode, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, http::StatusCode, post, web, App, HttpResponse, HttpServer, Responder};
 use std::sync::RwLock;
 use std::time::Instant;
 use usvg::fontdb;
 
 struct AppState {
     tree: RwLock<usvg::Tree>, // <- Mutex is necessary to mutate safely across threads
+}
+
+#[post("/update")]
+async fn update(req_body: String) -> impl Responder {
+    HttpResponse::Ok().body(req_body)
 }
 
 #[get("/tile/{z}/{x}/{y}.png")]
@@ -72,9 +77,14 @@ async fn main() -> std::io::Result<()> {
     });
 
     println!("Server started!");
-    HttpServer::new(move || App::new().app_data(state.clone()).service(tile))
-        .workers(8)
-        .bind(("127.0.0.1", 8080))?
-        .run()
-        .await
+    HttpServer::new(move || {
+        App::new()
+            .app_data(state.clone())
+            .service(update)
+            .service(tile)
+    })
+    .workers(8)
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
 }
