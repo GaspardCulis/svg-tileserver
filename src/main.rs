@@ -27,13 +27,13 @@ async fn manual_hello() -> impl Responder {
     HttpResponse::Ok().body("Hey there!")
 }
 
-// https://actix.rs/docs/application#shared-mutable-state
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     const SVG_PATH: &str =
         "C:/Users/a903823/OneDrive - Eviden/Documents/CODE/svguez/public/svg/sil/BT.PCT.svg";
 
+    println!("Starting server...");
+    let now = Instant::now();
     let tree = {
         let mut opt = usvg::Options::default();
         // Get file's absolute directory.
@@ -45,11 +45,15 @@ async fn main() -> std::io::Result<()> {
         fontdb.load_system_fonts();
 
         let svg_data = std::fs::read(&SVG_PATH).unwrap();
+        println!("Parsing {}...", &SVG_PATH);
         usvg::Tree::from_data(&svg_data, &opt, &fontdb).unwrap()
     };
+    let elapsed = now.elapsed();
+    println!("Parsing took {:.2?}", elapsed);
 
     let state = web::Data::new(AppState { tree });
 
+    println!("Server started!");
     HttpServer::new(move || {
         App::new()
             .app_data(state.clone())
