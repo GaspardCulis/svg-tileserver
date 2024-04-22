@@ -7,11 +7,6 @@ struct AppState {
     tree: RwLock<usvg::Tree>, // <- Mutex is necessary to mutate safely across threads
 }
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
-
 #[get("/tile/{z}/{x}/{y}.png")]
 async fn tile(path: web::Path<(i32, i32, i32)>, data: web::Data<AppState>) -> impl Responder {
     let now = Instant::now();
@@ -48,10 +43,6 @@ async fn tile(path: web::Path<(i32, i32, i32)>, data: web::Data<AppState>) -> im
         .body(pixmap.encode_png().unwrap())
 }
 
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     const SVG_PATH: &str =
@@ -81,15 +72,9 @@ async fn main() -> std::io::Result<()> {
     });
 
     println!("Server started!");
-    HttpServer::new(move || {
-        App::new()
-            .app_data(state.clone())
-            .service(hello)
-            .service(tile)
-            .route("/hey", web::get().to(manual_hello))
-    })
-    .workers(8)
-    .bind(("127.0.0.1", 8080))?
-    .run()
-    .await
+    HttpServer::new(move || App::new().app_data(state.clone()).service(tile))
+        .workers(8)
+        .bind(("127.0.0.1", 8080))?
+        .run()
+        .await
 }
