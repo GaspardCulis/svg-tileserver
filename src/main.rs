@@ -1,4 +1,4 @@
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, http::StatusCode, web, App, HttpResponse, HttpServer, Responder};
 use std::time::Instant;
 use usvg::fontdb;
 
@@ -26,7 +26,10 @@ async fn tile(path: web::Path<(u32, u32, u32)>, data: web::Data<AppState>) -> im
         z, x, y, elapsed
     );
 
-    HttpResponse::Ok().body(format!("Tile at (z={}, x={}, y={}) requested!", z, x, y))
+    HttpResponse::Ok()
+        .status(StatusCode::OK)
+        .content_type("image/png")
+        .body(pixmap.encode_png().unwrap())
 }
 
 async fn manual_hello() -> impl Responder {
