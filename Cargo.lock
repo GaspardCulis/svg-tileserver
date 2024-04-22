@@ -254,6 +254,7 @@ name = "rusvguez"
 version = "0.1.0"
 dependencies = [
  "resvg",
+ "tiny-skia",
  "usvg",
 ]
 
