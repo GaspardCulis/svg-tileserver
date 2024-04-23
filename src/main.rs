@@ -1,6 +1,6 @@
 use actix_web::{get, http::StatusCode, post, web, App, HttpResponse, HttpServer, Responder};
-use hex_color::HexColor;
-use serde_json::{Result, Value};
+use hex_color::{Display, HexColor};
+use serde::Deserialize;
 use std::borrow::BorrowMut;
 use std::sync::RwLock;
 use std::time::Instant;
@@ -10,6 +10,12 @@ struct AppState {
     tree: RwLock<usvg::Tree>, // <- Mutex is necessary to mutate safely across threads
 }
 
+#[derive(Deserialize)]
+struct UpdateParams {
+    id: String,
+    stroke: String,
+}
+
 unsafe fn very_bad_function<T>(reference: &T) -> &mut T {
     let const_ptr = reference as *const T;
     let mut_ptr = const_ptr as *mut T;
@@ -17,36 +23,10 @@ unsafe fn very_bad_function<T>(reference: &T) -> &mut T {
 }
 
 #[post("/update")]
-async fn update(req_body: String, data: web::Data<AppState>) -> impl Responder {
-    const REST_USAGE: &str = "Error, expected JSON object:
-{
-    id: string, // Node ID to update
-    stroke: string // Hex color of the new stroke color
-}";
+async fn update(params: web::Json<UpdateParams>, data: web::Data<AppState>) -> impl Responder {
+    let UpdateParams { id, stroke } = params.0;
 
-    let parsed: Result<Value> = serde_json::from_str(&req_body);
-    if parsed.is_err() {
-        return HttpResponse::from_error(parsed.unwrap_err());
-    }
-    let params = parsed.unwrap();
-    if !(params.is_object()) {
-        return HttpResponse::build(StatusCode::PRECONDITION_FAILED).body(REST_USAGE);
-    }
-    let params = params.as_object().unwrap();
-    if !(params.contains_key("id") && params.contains_key("stroke")) {
-        return HttpResponse::build(StatusCode::PRECONDITION_FAILED).body(REST_USAGE);
-    }
-    let (id, stroke) = (params.get("id").unwrap(), params.get("stroke").unwrap());
-    if !(id.is_string() && stroke.is_string()) {
-        return HttpResponse::build(StatusCode::PRECONDITION_FAILED).body(REST_USAGE);
-    }
-    let (id, stroke) = (id.as_str().unwrap(), stroke.as_str().unwrap());
-
-    let stroke = HexColor::parse(stroke);
-    if stroke.is_err() {
-        return HttpResponse::build(StatusCode::PRECONDITION_FAILED).body(REST_USAGE);
-    }
-    let stroke = stroke.unwrap();
+    let stroke = HexColor::parse(&stroke).unwrap();
     let paint = usvg::Paint::Color(usvg::Color {
         red: stroke.r,
         green: stroke.g,
@@ -54,7 +34,7 @@ async fn update(req_body: String, data: web::Data<AppState>) -> impl Responder {
     });
 
     let tree = data.tree.write().unwrap();
-    let mut node = tree.node_by_id(id).unwrap();
+    let mut node = tree.node_by_id(id.as_str()).unwrap();
     let node_mut = node.borrow_mut();
     match node_mut {
         usvg::Node::Path(e) => {
@@ -70,7 +50,17 @@ async fn update(req_body: String, data: web::Data<AppState>) -> impl Responder {
         _ => {}
     }
 
-    HttpResponse::Ok().body(req_body)
+    HttpResponse::Ok()
+        .status(StatusCode::OK)
+        .content_type("text/plain")
+        .body(
+            format!(
+                "Successfully updated node #{} stroke to {}",
+                id,
+                Display::new(stroke)
+            )
+            .to_string(),
+        )
 }
 
 #[get("/tile/{z}/{x}/{y}.png")]
