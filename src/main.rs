@@ -1,4 +1,6 @@
 use actix_web::{get, http::StatusCode, post, web, App, HttpResponse, HttpServer, Responder};
+use hex_color::HexColor;
+use serde_json::{Result, Value};
 use std::borrow::BorrowMut;
 use std::sync::RwLock;
 use std::time::Instant;
@@ -16,8 +18,43 @@ unsafe fn very_bad_function<T>(reference: &T) -> &mut T {
 
 #[post("/update")]
 async fn update(req_body: String, data: web::Data<AppState>) -> impl Responder {
+    const REST_USAGE: &str = "Error, expected JSON object:
+{
+    id: string, // Node ID to update
+    stroke: string // Hex color of the new stroke color
+}";
+
+    let parsed: Result<Value> = serde_json::from_str(&req_body);
+    if parsed.is_err() {
+        return HttpResponse::from_error(parsed.unwrap_err());
+    }
+    let params = parsed.unwrap();
+    if !(params.is_object()) {
+        return HttpResponse::build(StatusCode::PRECONDITION_FAILED).body(REST_USAGE);
+    }
+    let params = params.as_object().unwrap();
+    if !(params.contains_key("id") && params.contains_key("stroke")) {
+        return HttpResponse::build(StatusCode::PRECONDITION_FAILED).body(REST_USAGE);
+    }
+    let (id, stroke) = (params.get("id").unwrap(), params.get("stroke").unwrap());
+    if !(id.is_string() && stroke.is_string()) {
+        return HttpResponse::build(StatusCode::PRECONDITION_FAILED).body(REST_USAGE);
+    }
+    let (id, stroke) = (id.as_str().unwrap(), stroke.as_str().unwrap());
+
+    let stroke = HexColor::parse(stroke);
+    if stroke.is_err() {
+        return HttpResponse::build(StatusCode::PRECONDITION_FAILED).body(REST_USAGE);
+    }
+    let stroke = stroke.unwrap();
+    let paint = usvg::Paint::Color(usvg::Color {
+        red: stroke.r,
+        green: stroke.g,
+        blue: stroke.b,
+    });
+
     let tree = data.tree.write().unwrap();
-    let mut node = tree.node_by_id("12162").unwrap();
+    let mut node = tree.node_by_id(id).unwrap();
     let node_mut = node.borrow_mut();
     match node_mut {
         usvg::Node::Path(e) => {
@@ -25,11 +62,7 @@ async fn update(req_body: String, data: web::Data<AppState>) -> impl Responder {
 
             unsafe {
                 let mut_stroke = very_bad_function(stroke);
-                mut_stroke.set_paint(usvg::Paint::Color(usvg::Color {
-                    red: 255,
-                    green: 0,
-                    blue: 0,
-                }));
+                mut_stroke.set_paint(paint);
             }
 
             println!("Stroke updated");
