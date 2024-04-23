@@ -10,3 +10,4 @@ resvg = { path = "./resvg/crates/resvg" }
 tiny-skia = "0.11.4"
 usvg = { path = "./resvg/crates/usvg" }
 actix-web = "4"
+serde_json = "1.0.116"
