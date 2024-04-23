@@ -89,31 +89,6 @@ async fn tile(path: web::Path<(i32, i32, i32)>, data: web::Data<AppState>) -> im
         &mut pixmap.as_mut(),
     );
 
-    let mut paint = tiny_skia::Paint::default();
-    paint.set_color_rgba8(255, 255, 0, 255);
-
-    let stroke = tiny_skia::Stroke::default();
-    let mut path_builder = tiny_skia::PathBuilder::new();
-    path_builder.line_to(width, 0.);
-    let path = path_builder.finish().unwrap();
-    pixmap.stroke_path(
-        &path,
-        &paint,
-        &stroke,
-        tiny_skia::Transform::default(),
-        None,
-    );
-    let mut path_builder = tiny_skia::PathBuilder::new();
-    path_builder.line_to(0., height);
-    let path = path_builder.finish().unwrap();
-    pixmap.stroke_path(
-        &path,
-        &paint,
-        &stroke,
-        tiny_skia::Transform::default(),
-        None,
-    );
-
     let elapsed = now.elapsed();
     println!(
         "Rendering region (z={}, x={}, y={}) took {:.2?}",
