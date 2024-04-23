@@ -1,7 +1,6 @@
 use actix_web::{get, http::StatusCode, post, web, App, HttpResponse, HttpServer, Responder};
 use hex_color::{Display, HexColor};
 use serde::Deserialize;
-use std::borrow::BorrowMut;
 use std::sync::RwLock;
 use std::time::Instant;
 use usvg::fontdb;
@@ -34,9 +33,8 @@ async fn update(params: web::Json<UpdateParams>, data: web::Data<AppState>) -> i
     });
 
     let tree = data.tree.write().unwrap();
-    let mut node = tree.node_by_id(id.as_str()).unwrap();
-    let node_mut = node.borrow_mut();
-    match node_mut {
+    let node = tree.node_by_id(id.as_str()).unwrap();
+    match node {
         usvg::Node::Path(e) => {
             let stroke = e.stroke.as_ref().unwrap();
 
