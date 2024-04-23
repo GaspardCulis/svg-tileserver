@@ -1052,7 +1052,7 @@ dependencies = [
  "actix-web",
  "hex_color",
  "resvg",
- "serde_json",
+ "serde",
  "tiny-skia",
  "usvg",
 ]
