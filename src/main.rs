@@ -74,20 +74,46 @@ async fn tile(path: web::Path<(i32, i32, i32)>, data: web::Data<AppState>) -> im
 
     let width = 1024f32;
     let height = 1024f32;
-    let scale = z + 1.;
-    // TODO: Find magic numbers
-    let translate_x = -width * x - width * scale / 2.;
-    let translate_y = -height * y - height * scale / 2.;
+    let scale = 2f32.powf(z);
+    let translate_x = -width * x;
+    let translate_y = -height * y;
 
     let _pixmap_size = tree.size().to_int_size();
     let mut pixmap = tiny_skia::Pixmap::new(width as u32, height as u32).unwrap();
     resvg::render(
         &tree,
         tiny_skia::Transform::default()
+            .pre_translate(-width / 2., -height / 2.)
             .post_scale(scale, scale)
             .post_translate(translate_x, translate_y),
         &mut pixmap.as_mut(),
     );
+
+    let mut paint = tiny_skia::Paint::default();
+    paint.set_color_rgba8(255, 255, 0, 255);
+
+    let stroke = tiny_skia::Stroke::default();
+    let mut path_builder = tiny_skia::PathBuilder::new();
+    path_builder.line_to(width, 0.);
+    let path = path_builder.finish().unwrap();
+    pixmap.stroke_path(
+        &path,
+        &paint,
+        &stroke,
+        tiny_skia::Transform::default(),
+        None,
+    );
+    let mut path_builder = tiny_skia::PathBuilder::new();
+    path_builder.line_to(0., height);
+    let path = path_builder.finish().unwrap();
+    pixmap.stroke_path(
+        &path,
+        &paint,
+        &stroke,
+        tiny_skia::Transform::default(),
+        None,
+    );
+
     let elapsed = now.elapsed();
     println!(
         "Rendering region (z={}, x={}, y={}) took {:.2?}",
