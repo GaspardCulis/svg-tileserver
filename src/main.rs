@@ -1,4 +1,5 @@
 use actix_web::{get, http::StatusCode, post, web, App, HttpResponse, HttpServer, Responder};
+use std::borrow::BorrowMut;
 use std::sync::RwLock;
 use std::time::Instant;
 use usvg::fontdb;
@@ -7,8 +8,35 @@ struct AppState {
     tree: RwLock<usvg::Tree>, // <- Mutex is necessary to mutate safely across threads
 }
 
+unsafe fn very_bad_function<T>(reference: &T) -> &mut T {
+    let const_ptr = reference as *const T;
+    let mut_ptr = const_ptr as *mut T;
+    &mut *mut_ptr
+}
+
 #[post("/update")]
-async fn update(req_body: String) -> impl Responder {
+async fn update(req_body: String, data: web::Data<AppState>) -> impl Responder {
+    let tree = data.tree.write().unwrap();
+    let mut node = tree.node_by_id("12162").unwrap();
+    let node_mut = node.borrow_mut();
+    match node_mut {
+        usvg::Node::Path(e) => {
+            let stroke = e.stroke.as_ref().unwrap();
+
+            unsafe {
+                let mut_stroke = very_bad_function(stroke);
+                mut_stroke.set_paint(usvg::Paint::Color(usvg::Color {
+                    red: 255,
+                    green: 0,
+                    blue: 0,
+                }));
+            }
+
+            println!("Stroke updated");
+        }
+        _ => {}
+    }
+
     HttpResponse::Ok().body(req_body)
 }
 
