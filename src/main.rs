@@ -32,6 +32,7 @@ async fn update(params: web::Json<UpdateParams>, data: web::Data<AppState>) -> i
         blue: stroke.b,
     });
 
+    let now = Instant::now();
     let tree = data.tree.write().unwrap();
     let node = tree.node_by_id(id.as_str()).unwrap();
     match node {
@@ -48,14 +49,16 @@ async fn update(params: web::Json<UpdateParams>, data: web::Data<AppState>) -> i
         _ => {}
     }
 
+    let elapsed = now.elapsed();
     HttpResponse::Ok()
         .status(StatusCode::OK)
         .content_type("text/plain")
         .body(
             format!(
-                "Successfully updated node #{} stroke to {}",
+                "Successfully updated node #{} stroke to {} in {:.2?}",
                 id,
-                Display::new(stroke)
+                Display::new(stroke),
+                elapsed
             )
             .to_string(),
         )
