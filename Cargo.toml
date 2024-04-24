@@ -1,14 +1,13 @@
 [package]
-name = "rusvguez"
+name = "rusvguez_tilserver"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-resvg = { path = "./resvg/crates/resvg" }
+resvg = "0.41.0"
 tiny-skia = "0.11.4"
-usvg = { path = "./resvg/crates/usvg" }
+usvg = "0.41.0"
 actix-web = "4"
-serde = { version = "1.0", features = ["derive"] }
-hex_color = "3.0.0"
+clap = { version = "4.5.4", features = ["derive"] }
