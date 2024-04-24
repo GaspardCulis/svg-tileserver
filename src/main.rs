@@ -1,7 +1,5 @@
-use actix_web::{get, http::StatusCode, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, http::StatusCode, web, App, HttpResponse, HttpServer, Responder};
 use clap::Parser;
-use hex_color::{Display, HexColor};
-use serde::Deserialize;
 use std::sync::RwLock;
 use std::time::Instant;
 use usvg::fontdb;
@@ -9,61 +7,6 @@ use usvg::fontdb;
 struct AppState {
     tree: RwLock<usvg::Tree>, // <- Mutex is necessary to mutate safely across threads
     tile_size: u32,
-}
-
-#[derive(Deserialize)]
-struct UpdateParams {
-    id: String,
-    stroke: String,
-}
-
-unsafe fn very_bad_function<T>(reference: &T) -> &mut T {
-    let const_ptr = reference as *const T;
-    let mut_ptr = const_ptr as *mut T;
-    &mut *mut_ptr
-}
-
-#[post("/update")]
-async fn update(params: web::Json<UpdateParams>, data: web::Data<AppState>) -> impl Responder {
-    let UpdateParams { id, stroke } = params.0;
-
-    let stroke = HexColor::parse(&stroke).unwrap();
-    let paint = usvg::Paint::Color(usvg::Color {
-        red: stroke.r,
-        green: stroke.g,
-        blue: stroke.b,
-    });
-
-    let now = Instant::now();
-    let tree = data.tree.write().unwrap();
-    let node = tree.node_by_id(id.as_str()).unwrap();
-    match node {
-        usvg::Node::Path(e) => {
-            let stroke = e.stroke.as_ref().unwrap();
-
-            unsafe {
-                let mut_stroke = very_bad_function(stroke);
-                mut_stroke.set_paint(paint);
-            }
-
-            println!("Stroke updated");
-        }
-        _ => {}
-    }
-
-    let elapsed = now.elapsed();
-    HttpResponse::Ok()
-        .status(StatusCode::OK)
-        .content_type("text/plain")
-        .body(
-            format!(
-                "Successfully updated node #{} stroke to {} in {:.2?}",
-                id,
-                Display::new(stroke),
-                elapsed
-            )
-            .to_string(),
-        )
 }
 
 #[get("/tile/{z}/{x}/{y}.png")]
@@ -182,14 +125,9 @@ async fn main() -> std::io::Result<()> {
     });
 
     println!("Server started!");
-    HttpServer::new(move || {
-        App::new()
-            .app_data(state.clone())
-            .service(update)
-            .service(tile)
-    })
-    .workers(8)
-    .bind((bind_address, port))?
-    .run()
-    .await
+    HttpServer::new(move || App::new().app_data(state.clone()).service(tile))
+        .workers(8)
+        .bind((bind_address, port))?
+        .run()
+        .await
 }
