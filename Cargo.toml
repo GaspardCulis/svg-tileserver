@@ -1,7 +1,9 @@
 [package]
-name = "svg_tileserver"
+name = "svg-tileserver"
+description = "A high performance SVG Leaflet/MapLibre compatible tile server"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
 
 [dependencies]
 resvg = "0.41.0"
