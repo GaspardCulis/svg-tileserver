@@ -4,6 +4,8 @@ description = "A high performance SVG Leaflet/MapLibre compatible tile server"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
+authors = ["GaspardCulis"]
+repository = "https://github.com/GaspardCulis/svg-tileserver"
 
 [dependencies]
 resvg = "0.41.0"
