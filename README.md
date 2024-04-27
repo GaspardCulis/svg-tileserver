@@ -1,4 +1,6 @@
 # SVG TileServer
+![Build Status](https://github.com/GaspardCulis/svg-tileserver/actions/workflows/rust.yml/badge.svg)
+[![Crates.io](https://img.shields.io/crates/v/svg-tileserver.svg)](https://crates.io/crates/svg-tileserver)
 
 A simple, memory-safe 🔥 and blazingly fast 🚀 Leaflet/MapLibre compatile tile-server that serves PNG tiles rasterized from an SVG image. This can be useful when needing to render highly complex and detailed SVGs.
 
