@@ -11,7 +11,9 @@ Built using [actix_web](https://actix.rs/) and crates from the [resvg project](h
 ### Server side
 
 ```
-Usage: svg_tileserver [OPTIONS] <SVG_PATH>
+A high performance SVG Leaflet/MapLibre compatible tile server
+
+Usage: svg-tileserver [OPTIONS] <SVG_PATH>
 
 Arguments:
   <SVG_PATH>  The path of the SVG that should be served
@@ -19,7 +21,7 @@ Arguments:
 Options:
   -t, --tile-size <TILE_SIZE>        The size in pixels of a PNG tile [default: 256]
   -p, --port <PORT>                  The port to start the server on [default: 8080]
-  -b, --bind-address <BIND_ADDRESS>  The size in pixels of a PNG tile [default: 127.0.0.1]
+  -b, --bind-address <BIND_ADDRESS>  The address to bind the server on [default: 127.0.0.1]
   -h, --help                         Print help
   -V, --version                      Print version
 ```
@@ -30,12 +32,12 @@ Options:
 import L from "leaflet";
 
 const map = new L.Map("#map", {
-  crs: L.CRS.Simple, 
+  crs: L.CRS.Simple,
   center: [0, 0],
-  zoom: 0
+  zoom: 0,
 });
 
-L.tileLayer('https://localhost:8080/{z}/{x}/{y}.png', {
-    maxZoom: 19
+L.tileLayer("https://localhost:8080/{z}/{x}/{y}.png", {
+  maxZoom: 19,
 }).addTo(map);
 ```
