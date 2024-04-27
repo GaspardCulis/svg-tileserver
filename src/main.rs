@@ -60,7 +60,7 @@ struct Args {
     #[arg(short, long, default_value_t = 8080)]
     port: u16,
 
-    /// The size in pixels of a PNG tile
+    /// The address to bind the server on
     #[arg(short, long, default_value = "127.0.0.1")]
     bind_address: String,
 }
