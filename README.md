@@ -38,7 +38,7 @@ const map = new L.Map("#map", {
   zoom: 0,
 });
 
-L.tileLayer("https://localhost:8080/tile/{z}/{x}/{y}.png", {
+L.tileLayer("http://localhost:8080/tile/{z}/{x}/{y}.png", {
   maxZoom: 19,
 }).addTo(map);
 ```
