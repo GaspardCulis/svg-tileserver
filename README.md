@@ -1,4 +1,5 @@
 # SVG TileServer
+
 ![Build Status](https://github.com/GaspardCulis/svg-tileserver/actions/workflows/rust.yml/badge.svg)
 [![Crates.io](https://img.shields.io/crates/v/svg-tileserver.svg)](https://crates.io/crates/svg-tileserver)
 
@@ -37,7 +38,7 @@ const map = new L.Map("#map", {
   zoom: 0,
 });
 
-L.tileLayer("https://localhost:8080/{z}/{x}/{y}.png", {
+L.tileLayer("https://localhost:8080/tile/{z}/{x}/{y}.png", {
   maxZoom: 19,
 }).addTo(map);
 ```
