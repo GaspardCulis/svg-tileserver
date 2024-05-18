@@ -98,7 +98,10 @@ async fn main() -> std::io::Result<()> {
         tile_size,
     });
 
-    println!("Server started!");
+    println!(
+        "Server started on http://{}:{}/tile/{{z}}/{{x}}/{{y}}.png",
+        bind_address, port
+    );
     HttpServer::new(move || App::new().app_data(state.clone()).service(tile))
         .workers(8)
         .bind((bind_address, port))?
