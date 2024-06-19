@@ -32,7 +32,7 @@ Options:
 ```js
 import L from "leaflet";
 
-const map = new L.Map("#map", {
+const map = new L.Map("map", {
   crs: L.CRS.Simple,
   center: [0, 0],
   zoom: 0,
